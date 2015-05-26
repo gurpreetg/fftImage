@@ -20,7 +20,6 @@ namespace FFTimage
         }
 
         Bitmap output;
-
         private Bitmap ColorToGrayscale(Bitmap bmp)
         {
             int w = bmp.Width,
@@ -116,17 +115,32 @@ namespace FFTimage
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                Bitmap inputImage = new Bitmap(openFileDialog1.FileName);
-                System.Drawing.Image sizeImage = (System.Drawing.Image)( new Bitmap(inputImage, 512,512));
-                inputImage = (Bitmap)(sizeImage);
-                uploadedPictureBox.Image = inputImage;
-                inputImage = ColorToGrayscale(inputImage);
-                ComplexImage finalImg = ComplexImage.FromBitmap(inputImage);
-                finalImg.ForwardFourierTransform();
-                Bitmap outputImg = finalImg.ToBitmap();
-                fftPictureBox.Image = outputImg;
-                inputImage.Dispose();
-                output.Dispose();
+
+                
+                try
+                {
+
+                    Bitmap inputImage = new Bitmap(openFileDialog1.FileName);
+
+                    System.Drawing.Image sizeImage = (System.Drawing.Image)(new Bitmap(inputImage, 512, 512));
+                    inputImage = (Bitmap)(sizeImage);
+                    uploadedPictureBox.Image = inputImage;
+                    inputImage = ColorToGrayscale(inputImage);
+                    ComplexImage finalImg = ComplexImage.FromBitmap(inputImage);
+                    finalImg.ForwardFourierTransform();
+                    Bitmap outputImg = finalImg.ToBitmap();
+                    fftPictureBox.Image = outputImg;
+                    inputImage.Dispose();
+                    output.Dispose();
+
+                }
+               catch(ArgumentException)
+               {
+                   MessageBox.Show("Invalid Input Type!", "Error");     
+
+               }
+
+                
             }
         }
     }
