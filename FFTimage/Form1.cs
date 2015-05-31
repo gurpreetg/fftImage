@@ -9,17 +9,29 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
 using AForge.Imaging;
+using System.IO;
+
 namespace FFTimage
 {
     public partial class Form1 : Form
     {
+        
+        
+
+
         public Form1()
         {
             InitializeComponent();
+            uploadedPictureBox.BackColor = Color.DarkGray;
+            fftPictureBox.BackColor = Color.DarkGray;
+            FFTRadioButton.Checked = true;
+            saveFileDialog1.AddExtension = true;
+            saveFileDialog1.Filter = "JPEG|*.jpg";
            
         }
 
-        Bitmap output;
+        
+        //Bitmap ColorToGrayscale(Bitmap bmp) returns a bitmap which is 8bbp and grayscale copy of bmp.
         private Bitmap ColorToGrayscale(Bitmap bmp)
         {
             int w = bmp.Width,
@@ -28,6 +40,7 @@ namespace FFTimage
             PixelFormat pfIn = bmp.PixelFormat;
             ColorPalette palette;
             BitmapData bmpData, outputData;
+            Bitmap output;
 
             //Create the new bitmap
             output = new Bitmap(w, h, PixelFormat.Format8bppIndexed);
@@ -56,10 +69,18 @@ namespace FFTimage
             //Get the number of bytes per pixel
             switch (pfIn)
             {
-                case PixelFormat.Format24bppRgb: bytesPerPixel = 3; break;
-                case PixelFormat.Format32bppArgb: bytesPerPixel = 4; break;
-                case PixelFormat.Format32bppRgb: bytesPerPixel = 4; break;
-                default: throw new InvalidOperationException("Image format not supported");
+                case PixelFormat.Format24bppRgb: 
+                    bytesPerPixel = 3;
+                    break;
+                case PixelFormat.Format32bppArgb:
+                    bytesPerPixel = 4; 
+                    break;
+                case PixelFormat.Format32bppRgb: 
+                    bytesPerPixel = 4; 
+                    break;
+                default: 
+                    throw new InvalidOperationException("Image format not supported");
+                   
             }
 
             //Lock the images
@@ -115,23 +136,31 @@ namespace FFTimage
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-
-                
                 try
                 {
-
                     Bitmap inputImage = new Bitmap(openFileDialog1.FileName);
-
                     System.Drawing.Image sizeImage = (System.Drawing.Image)(new Bitmap(inputImage, 512, 512));
+                    inputImage.Dispose();
                     inputImage = (Bitmap)(sizeImage);
                     uploadedPictureBox.Image = inputImage;
                     inputImage = ColorToGrayscale(inputImage);
                     ComplexImage finalImg = ComplexImage.FromBitmap(inputImage);
-                    finalImg.ForwardFourierTransform();
-                    Bitmap outputImg = finalImg.ToBitmap();
-                    fftPictureBox.Image = outputImg;
-                    inputImage.Dispose();
-                    output.Dispose();
+
+                    switch(FFTRadioButton.Checked)
+                    {
+                        case true:
+                            finalImg.ForwardFourierTransform();
+                            transformedLabel.Text = "FFT Image";
+                            break;
+                        default:
+                            finalImg.BackwardFourierTransform();
+                            transformedLabel.Text = "BFT Image";
+                            break;
+                    }
+
+                    fftPictureBox.Image = finalImg.ToBitmap();
+                    
+                    
 
                 }
                catch(ArgumentException)
@@ -142,6 +171,19 @@ namespace FFTimage
 
                 
             }
+        }
+
+        private void saveImageButton_Click(object sender, EventArgs e)
+        {
+            saveFileDialog1.ShowDialog();
+        }
+
+        private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+            string ext = Path.GetExtension(saveFileDialog1.FileName);
+            Bitmap savingPic = new Bitmap(fftPictureBox.Image);
+            savingPic.Save(saveFileDialog1.FileName, ImageFormat.Jpeg);
+            savingPic.Dispose();
         }
     }
 }
